@@ -1,41 +1,54 @@
-// فعال‌سازی قابلیت آفلاین
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker Registered'))
-      .catch(err => console.log('Service Worker Failed', err));
-  });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(() => console.log('SW OK'));
+    });
 }
+
+// تابع تغییر تب
+window.openTab = function(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    renderItems();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('injectionForm');
-    const editingIdInput = document.getElementById('editingId');
-    const submitBtn = document.getElementById('submitBtn');
-    const cancelEditBtn = document.getElementById('cancelEdit');
-    const subPartsContainer = document.getElementById('subPartsContainer');
-    const itemsContainer = document.getElementById('itemsContainer');
-    const imageInput = document.getElementById('imageInput');
+    const tableBody = document.getElementById('tableBody');
+    const todayItemsContainer = document.getElementById('todayItemsContainer');
     const searchInput = document.getElementById('searchInput');
+    const imageInput = document.getElementById('imageInput');
     const exportBtn = document.getElementById('exportExcel');
 
-    let items = JSON.parse(localStorage.getItem('injection_db_final')) || [];
+    let items = JSON.parse(localStorage.getItem('injection_db_v2')) || [];
     let currentImageBase64 = "";
+    let bomLookupTable = {};
 
-    // تابع کمکی برای افزودن ردیف قطعه جانبی
-    function addSubPartRow(name = "", weight = "") {
-        const row = document.createElement('div');
-        row.className = 'sub-part-row';
-        row.innerHTML = `
-            <input type="text" placeholder="نام" class="sp-name" value="${name}">
-            <input type="number" step="0.01" placeholder="وزن" class="sp-weight" value="${weight}">
-            <button type="button" onclick="this.parentElement.remove()" style="color:red; border:none; background:none; font-weight:bold;">&times;</button>
-        `;
-        subPartsContainer.appendChild(row);
+    async function loadBomData() {
+        try {
+            const response = await fetch('bom-data.json');
+            const data = await response.json();
+            for (let cat in data) {
+                for (let model in data[cat]) {
+                    data[cat][model].forEach(i => {
+                        bomLookupTable[i.code] = { name: i.name, type: cat, model: model };
+                    });
+                }
+            }
+        } catch (e) { console.log("BOM Data not found"); }
     }
+    loadBomData();
 
-    document.getElementById('addSubPart').addEventListener('click', () => addSubPartRow());
+    document.getElementById('partCode').addEventListener('input', (e) => {
+        const info = bomLookupTable[e.target.value.trim()];
+        if(info) {
+            document.getElementById('partName').value = info.name;
+            document.getElementById('productType').value = info.type;
+            document.getElementById('model').value = info.model;
+        }
+    });
 
-    // پردازش تصویر
     imageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -44,11 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 500;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * (MAX_WIDTH / img.width);
-                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                const MAX = 400; 
+                let w = img.width, h = img.height;
+                if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+                else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
                 document.getElementById('imagePreview').innerHTML = `<img src="${currentImageBase64}">`;
             };
             img.src = ev.target.result;
@@ -56,21 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     });
 
-    // ثبت یا ویرایش فرم
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const subParts = [];
-        document.querySelectorAll('.sub-part-row').forEach(row => {
-            const n = row.querySelector('.sp-name').value;
-            const w = row.querySelector('.sp-weight').value;
-            if (n) subParts.push({ name: n, weight: w });
-        });
+        const editingId = document.getElementById('editingId').value;
+        const partCode = document.getElementById('partCode').value.trim();
 
-        const formData = {
+        const isDuplicate = items.some(i => i.partCode === partCode && i.id.toString() !== editingId);
+        if(isDuplicate) {
+            alert("خطا: این کد قبلاً ثبت شده است!");
+            return;
+        }
+
+        const data = {
+            id: editingId ? parseInt(editingId) : Date.now(),
+            date: editingId ? items.find(x=>x.id==editingId).date : new Date().toLocaleDateString('fa-IR'),
+            partCode: partCode,
+            partName: document.getElementById('partName').value,
             productType: document.getElementById('productType').value,
             model: document.getElementById('model').value,
-            partCode: document.getElementById('partCode').value,
-            partName: document.getElementById('partName').value,
             mainMaterial: document.getElementById('mainMaterial').value,
             altMaterial: document.getElementById('altMaterial').value,
             masterbatch: document.getElementById('masterbatch').value,
@@ -81,54 +99,102 @@ document.addEventListener('DOMContentLoaded', () => {
             coolingTime: document.getElementById('coolingTime').value,
             partWeight: document.getElementById('partWeight').value,
             runnerWeight: document.getElementById('runnerWeight').value,
+            usedPartName: document.getElementById('usedPartName').value,
+            usedPartWeight: document.getElementById('usedPartWeight').value,
             specialTools: document.getElementById('specialTools').value,
-            notes: document.getElementById('notes').value,
             packagingType: document.getElementById('packagingType').value,
             packagingQty: document.getElementById('packagingQty').value,
-            subParts: subParts,
-            image: currentImageBase64 || (editingIdInput.value ? items.find(i => i.id == editingIdInput.value).image : "")
+            notes: document.getElementById('notes').value,
+            image: currentImageBase64 || (editingId ? items.find(x=>x.id==editingId).image : "")
         };
 
-        if (editingIdInput.value) {
-            // حالت ویرایش
-            const index = items.findIndex(i => i.id == editingIdInput.value);
-            items[index] = { ...items[index], ...formData };
-            alert("ویرایش با موفقیت انجام شد.");
+        if (editingId) {
+            const idx = items.findIndex(i => i.id == editingId);
+            items[idx] = data;
         } else {
-            // حالت ثبت جدید
-            formData.id = Date.now();
-            formData.date = new Date().toLocaleDateString('fa-IR');
-            items.unshift(formData);
-            alert("قطعه جدید ثبت شد.");
+            items.unshift(data);
         }
 
-        localStorage.setItem('injection_db_final', JSON.stringify(items));
+        localStorage.setItem('injection_db_v2', JSON.stringify(items));
         resetForm();
         renderItems();
+        showSuccess();
     });
 
     function resetForm() {
         form.reset();
-        editingIdInput.value = "";
-        subPartsContainer.innerHTML = "";
+        document.getElementById('editingId').value = "";
         document.getElementById('imagePreview').innerHTML = "";
         currentImageBase64 = "";
-        submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> ثبت شناسنامه فنی';
-        cancelEditBtn.style.display = "none";
+        document.getElementById('cancelEdit').style.display = "none";
+        document.getElementById('submitBtn').innerText = "ثبت نهایی";
     }
 
-    cancelEditBtn.addEventListener('click', resetForm);
+    function renderItems() {
+        const term = searchInput.value.trim();
+        const today = new Date().toLocaleDateString('fa-IR');
+        
+        tableBody.innerHTML = "";
+        todayItemsContainer.innerHTML = "";
 
-    // بارگذاری برای ویرایش
+        const filteredItems = items.filter(i => i.partName.includes(term) || i.partCode.includes(term));
+
+        filteredItems.forEach(item => {
+            // ۱. رندر در جدول اصلی (تب دوم)
+            const row = `
+                <tr>
+                    <td class="sticky-col">
+                        <i class="bi bi-pencil-square" onclick="editItem(${item.id})" style="color:blue; cursor:pointer; margin-left:10px"></i>
+                        <i class="bi bi-trash3" onclick="deleteItem(${item.id})" style="color:red; cursor:pointer"></i>
+                    </td>
+                    <td><b>${item.partCode}</b></td>
+                    <td>${item.partName}</td>
+                    <td>${item.productType}</td>
+                    <td>${item.model}</td>
+                    <td>${item.mainMaterial}</td>
+                    <td>${item.altMaterial}</td>
+                    <td>${item.masterbatch}</td>
+                    <td>${item.machineName}</td>
+                    <td>${item.moldCode}</td>
+                    <td>${item.cavity}</td>
+                    <td>${item.cycleTime}</td>
+                    <td>${item.coolingTime}</td>
+                    <td>${item.partWeight}</td>
+                    <td>${item.runnerWeight}</td>
+                    <td>${item.usedPartName}</td>
+                    <td>${item.usedPartWeight}</td>
+                    <td>${item.specialTools}</td>
+                    <td>${item.packagingType}</td>
+                    <td>${item.packagingQty}</td>
+                    <td>${item.date}</td>
+                    <td>${item.notes}</td>
+                </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+
+            // ۲. رندر در لیست امروز (تب اول) با دکمه ویرایش و حذف
+            if (item.date === today) {
+                const card = `
+                    <div class="item-card">
+                        <span><b>${item.partCode}</b> | ${item.partName}</span>
+                        <div class="card-actions-mini">
+                            <i class="bi bi-pencil-square" onclick="editItem(${item.id})" style="color:blue"></i>
+                            <i class="bi bi-trash3" onclick="deleteItem(${item.id})" style="color:red"></i>
+                        </div>
+                    </div>`;
+                todayItemsContainer.insertAdjacentHTML('beforeend', card);
+            }
+        });
+        if(!todayItemsContainer.innerHTML) todayItemsContainer.innerHTML = "<p style='font-size:0.75rem; color:gray; text-align:center;'>موردی امروز ثبت نشده است.</p>";
+    }
+
     window.editItem = (id) => {
         const item = items.find(i => i.id == id);
-        if (!item) return;
-
-        editingIdInput.value = item.id;
-        document.getElementById('productType').value = item.productType;
-        document.getElementById('model').value = item.model;
+        openTab('registrationTab');
+        document.getElementById('editingId').value = item.id;
         document.getElementById('partCode').value = item.partCode;
         document.getElementById('partName').value = item.partName;
+        document.getElementById('productType').value = item.productType;
+        document.getElementById('model').value = item.model;
         document.getElementById('mainMaterial').value = item.mainMaterial;
         document.getElementById('altMaterial').value = item.altMaterial;
         document.getElementById('masterbatch').value = item.masterbatch;
@@ -139,101 +205,47 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('coolingTime').value = item.coolingTime;
         document.getElementById('partWeight').value = item.partWeight;
         document.getElementById('runnerWeight').value = item.runnerWeight;
+        document.getElementById('usedPartName').value = item.usedPartName;
+        document.getElementById('usedPartWeight').value = item.usedPartWeight;
         document.getElementById('specialTools').value = item.specialTools;
-        document.getElementById('notes').value = item.notes;
         document.getElementById('packagingType').value = item.packagingType;
         document.getElementById('packagingQty').value = item.packagingQty;
-
-        subPartsContainer.innerHTML = "";
-        item.subParts.forEach(sp => addSubPartRow(sp.name, sp.weight));
-
-        if (item.image) {
-            document.getElementById('imagePreview').innerHTML = `<img src="${item.image}">`;
-        }
-
-        submitBtn.innerHTML = '<i class="bi bi-pencil-square"></i> به‌روزرسانی تغییرات';
-        cancelEditBtn.style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('notes').value = item.notes;
+        if(item.image) document.getElementById('imagePreview').innerHTML = `<img src="${item.image}">`;
+        
+        document.getElementById('submitBtn').innerText = "بروزرسانی تغییرات";
+        document.getElementById('cancelEdit').style.display = "block";
+        window.scrollTo({top:0, behavior:'smooth'});
     };
 
-    function renderItems(term = "") {
-        itemsContainer.innerHTML = "";
-        const filtered = items.filter(i => i.partName.includes(term) || i.partCode.includes(term));
-        filtered.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <div class="card-actions">
-                    <i class="bi bi-pencil-square edit-icon" onclick="editItem(${item.id})"></i>
-                    <i class="bi bi-trash3-fill delete-icon" onclick="deleteItem(${item.id})"></i>
-                </div>
-                <h3>${item.partCode} - ${item.partName}</h3>
-                <div class="item-data-full">
-                    <div><b>محصول:</b> ${item.productType}</div>
-                    <div><b>مدل:</b> ${item.model}</div>
-                    <div><b>دستگاه:</b> ${item.machineName}</div>
-                    <div><b>قالب:</b> ${item.moldCode}</div>
-                    <div><b>کویته:</b> ${item.cavity}</div>
-                    <div><b>سایکل:</b> ${item.cycleTime}s</div>
-                    <div><b>خنکی:</b> ${item.coolingTime}s</div>
-                    <div><b>وزن:</b> ${item.partWeight}g</div>
-                    <div><b>راهگاه:</b> ${item.runnerWeight}g</div>
-                    <div><b>مواد اصلی:</b> ${item.mainMaterial}</div>
-                    <div><b>جایگزین:</b> ${item.altMaterial}</div>
-                    <div><b>مستربچ:</b> ${item.masterbatch}</div>
-                    <div><b>بسته‌بندی:</b> ${item.packagingType}</div>
-                    <div><b>تعداد:</b> ${item.packagingQty}</div>
-                    <div><b>ابزار خاص:</b> ${item.specialTools}</div>
-                    <div><b>تاریخ:</b> ${item.date}</div>
-                </div>
-                ${item.image ? `<img src="${item.image}" class="card-img">` : ""}
-            `;
-            itemsContainer.appendChild(card);
-        });
-    }
-
     window.deleteItem = (id) => {
-        if (confirm("آیا این مورد حذف شود؟")) {
+        if(confirm("آیا این مورد حذف شود؟")) {
             items = items.filter(i => i.id !== id);
-            localStorage.setItem('injection_db_final', JSON.stringify(items));
+            localStorage.setItem('injection_db_v2', JSON.stringify(items));
             renderItems();
         }
     };
 
-    searchInput.addEventListener('input', (e) => renderItems(e.target.value));
-
-    // دانلود همزمان اکسل و عکس
-    exportBtn.addEventListener('click', async () => {
+    exportBtn.addEventListener('click', () => {
         if (items.length === 0) return;
-
-        const headers = ["ردیف", "نوع محصول", "مدل یا سری", "کد قطعه", "نام قطعه", "تصویر قطعه", "مواد اصلی", "مواد جایگزین", "مستربچ", "نام دستگاه", "کد قالب", "کویته", "سایکل تایم", "زمان خنکی", "وزن قطعه", "وزن راهگاه", "ابزار خاص", "توضیحات", "قطعات بکار رفته", "وزن جانبی", "نوع بسته‌بندی", "تعداد در بسته", "تاریخ ثبت"];
+        const headers = ["کد", "نام", "محصول", "مدل", "سایکل", "وزن", "تاریخ"];
         let csv = "\uFEFF" + headers.join(",") + "\n";
-
-        items.forEach((item, index) => {
-            const subN = item.subParts.map(s => s.name).join(" | ");
-            const subW = item.subParts.map(s => s.weight).join(" | ");
-            const clean = (t) => `"${String(t || "").replace(/"/g, '""')}"`;
-            const row = [index + 1, clean(item.productType), clean(item.model), clean(item.partCode), clean(item.partName), item.image ? "دارد" : "ندارد", clean(item.mainMaterial), clean(item.altMaterial), clean(item.masterbatch), clean(item.machineName), clean(item.moldCode), item.cavity, item.cycleTime, item.coolingTime, item.partWeight, item.runnerWeight, clean(item.specialTools), clean(item.notes), clean(subN), clean(subW), clean(item.packagingType), item.packagingQty, item.date];
-            csv += row.join(",") + "\n";
+        items.forEach(i => {
+            csv += `"${i.partCode}","${i.partName}","${i.productType}","${i.model}","${i.cycleTime}","${i.partWeight}","${i.date}"\n`;
         });
-
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `Technical_Data_Full.csv`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `Injection_Report.csv`;
         a.click();
-
-        // دانلود عکس‌ها
-        const withImg = items.filter(i => i.image);
-        for (let i = 0; i < withImg.length; i++) {
-            const link = document.createElement('a');
-            link.href = withImg[i].image;
-            link.download = `${withImg[i].partCode || withImg[i].partName}.jpg`;
-            link.click();
-            await new Promise(r => setTimeout(r, 400));
-        }
     });
 
+    searchInput.addEventListener('input', renderItems);
     renderItems();
 });
+
+function showSuccess() {
+    const m = document.getElementById('successModal');
+    m.style.display = 'flex';
+    setTimeout(() => m.style.display = 'none', 1500);
+}

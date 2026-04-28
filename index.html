@@ -6,102 +6,163 @@
     <title>شناسنامه فنی تزریق</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
 
     <div class="app-container">
         <header>
-            <h1><i class="bi bi-file-earmark-spreadsheet-fill"></i> شناسنامه فنی قطعات تزریق</h1>
-            <p>مدیریت یکپارچه اطلاعات مهندسی و فرآیندی</p>
+            <img src="logo.png" alt="Logo" class="main-logo">
+            <h1>مدیریت قطعات تزریق</h1>
         </header>
 
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="openTab('registrationTab')">
+                <i class="bi bi-plus-circle"></i> فرم ثبت روزانه
+            </button>
+            <button class="tab-btn" onclick="openTab('databaseTab')">
+                <i class="bi bi-table"></i> بانک اطلاعات (جدول)
+            </button>
+        </nav>
+
         <main>
-            <section class="form-card">
-                <form id="injectionForm">
-                    <!-- فیلد مخفی برای تشخیص ویرایش -->
-                    <input type="hidden" id="editingId" value="">
-
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-info-circle-fill"></i> مشخصات عمومی قطعه</div>
-                        <div class="form-grid">
-                            <div class="input-group"><label>نوع محصول</label><input type="text" id="productType"></div>
-                            <div class="input-group"><label>مدل یا سری</label><input type="text" id="model"></div>
-                            <div class="input-group"><label class="required-label">کد قطعه</label><input type="text" id="partCode" required></div>
-                            <div class="input-group"><label class="required-label">نام قطعه</label><input type="text" id="partName" required></div>
+            <!-- تب ثبت و گزارش روزانه -->
+            <section id="registrationTab" class="tab-content active">
+                <div class="form-card">
+                    <form id="injectionForm">
+                        <input type="hidden" id="editingId" value="">
+                        
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-info-circle-fill"></i> مشخصات عمومی</div>
+                            <div class="form-grid stack-on-mobile">
+                                <div class="input-group"><label class="required-label">کد قطعه</label><input type="text" id="partCode" required></div>
+                                <div class="input-group"><label class="required-label">نام قطعه</label><input type="text" id="partName" required></div>
+                                <div class="input-group"><label>نوع محصول</label><input type="text" id="productType"></div>
+                                <div class="input-group"><label>مدل یا سری</label><input type="text" id="model"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-camera-fill"></i> مستندات تصویری</div>
-                        <div class="image-upload-area">
-                            <input type="file" id="imageInput" accept="image/*" capture="environment" hidden>
-                            <button type="button" class="btn-secondary" onclick="document.getElementById('imageInput').click()">
-                                <i class="bi bi-camera"></i> عکس قطعه
-                            </button>
-                            <div id="imagePreview" class="preview-box"></div>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-camera-fill"></i> مستندات تصویری</div>
+                            <div class="image-upload-area">
+                                <input type="file" id="imageInput" accept="image/*" capture="environment" hidden>
+                                <button type="button" class="btn-secondary" onclick="document.getElementById('imageInput').click()">
+                                    <i class="bi bi-camera"></i> عکس قطعه
+                                </button>
+                                <div id="imagePreview" class="preview-box"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-droplet-fill"></i> متریال و مواد اولیه</div>
-                        <div class="form-grid">
-                            <div class="input-group"><label>مواد مصرفی اصلی</label><input type="text" id="mainMaterial"></div>
-                            <div class="input-group"><label>مواد مصرفی جایگزین</label><input type="text" id="altMaterial"></div>
-                            <div class="input-group"><label>مستربچ</label><input type="text" id="masterbatch"></div>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-droplet-fill"></i> متریال</div>
+                            <div class="form-grid stack-on-mobile">
+                                <div class="input-group"><label>مواد اصلی</label><input type="text" id="mainMaterial"></div>
+                                <div class="input-group"><label>مواد جایگزین</label><input type="text" id="altMaterial"></div>
+                                <div class="input-group"><label>مستربچ</label><input type="text" id="masterbatch"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-gear-wide-connected"></i> تنظیمات فرآیند و دستگاه</div>
-                        <div class="form-grid">
-                            <div class="input-group"><label>نام دستگاه</label><input type="text" id="machineName"></div>
-                            <div class="input-group"><label>کد قالب</label><input type="text" id="moldCode"></div>
-                            <div class="input-group"><label>تعداد کویته</label><input type="number" id="cavity"></div>
-                            <div class="input-group"><label>سایکل تایم (S)</label><input type="number" step="0.1" id="cycleTime"></div>
-                            <div class="input-group"><label>زمان خنکی (S)</label><input type="number" id="coolingTime"></div>
-                            <div class="input-group"><label>وزن قطعه (G)</label><input type="number" step="0.01" id="partWeight"></div>
-                            <div class="input-group"><label>وزن راهگاه (G)</label><input type="number" step="0.01" id="runnerWeight"></div>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-gear-wide-connected"></i> تنظیمات فرآیند</div>
+                            <div class="form-grid stack-on-mobile">
+                                <div class="input-group"><label>نام دستگاه</label><input type="text" id="machineName"></div>
+                                <div class="input-group"><label>کد قالب</label><input type="text" id="moldCode"></div>
+                                <div class="input-group"><label>تعداد کویته</label><input type="number" id="cavity"></div>
+                                <div class="input-group"><label>سایکل (S)</label><input type="number" step="0.1" id="cycleTime"></div>
+                                <div class="input-group"><label>زمان خنکی (S)</label><input type="number" id="coolingTime"></div>
+                                <div class="input-group"><label>وزن قطعه (G)</label><input type="number" step="0.01" id="partWeight"></div>
+                                <div class="input-group"><label>وزن راهگاه (G)</label><input type="number" step="0.01" id="runnerWeight"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-tools"></i> ملزومات و قطعات جانبی</div>
-                        <div class="input-group full-width"><label>ابزارآلات خاص</label><input type="text" id="specialTools"></div>
-                        <div id="subPartsContainer" style="margin-top:10px;"></div>
-                        <button type="button" class="btn-outline" id="addSubPart"><i class="bi bi-plus-lg"></i> افزودن قطعه/وزن جانبی</button>
-                    </div>
-
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-box-seam-fill"></i> بسته‌بندی نهایی</div>
-                        <div class="form-grid">
-                            <div class="input-group"><label>نوع بسته‌بندی</label><input type="text" id="packagingType"></div>
-                            <div class="input-group"><label>تعداد در بسته‌بندی</label><input type="number" id="packagingQty"></div>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-tools"></i> ملزومات جانبی</div>
+                            <div class="form-grid stack-on-mobile">
+                                <div class="input-group"><label>نام قطعات بکار رفته</label><input type="text" id="usedPartName"></div>
+                                <div class="input-group"><label>وزن قطعات بکار رفته</label><input type="number" step="0.01" id="usedPartWeight"></div>
+                                <div class="input-group"><label>ابزارآلات خاص</label><input type="text" id="specialTools" placeholder="فیکسچر و..."></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="section-box">
-                        <div class="section-header"><i class="bi bi-sticky-fill"></i> ملاحظات فنی</div>
-                        <textarea id="notes" rows="3"></textarea>
-                    </div>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-box-seam-fill"></i> بسته‌بندی</div>
+                            <div class="form-grid stack-on-mobile">
+                                <div class="input-group"><label>نوع بسته‌بندی</label><input type="text" id="packagingType"></div>
+                                <div class="input-group"><label>تعداد در بسته‌بندی</label><input type="number" id="packagingQty"></div>
+                            </div>
+                        </div>
 
-                    <button type="submit" id="submitBtn" class="btn-primary"><i class="bi bi-cloud-arrow-up-fill"></i> ثبت شناسنامه فنی</button>
-                    <button type="button" id="cancelEdit" class="btn-danger" style="display:none; margin-top:10px;">انصراف از ویرایش</button>
-                </form>
+                        <div class="section-box">
+                            <div class="section-header"><i class="bi bi-sticky-fill"></i> ملاحظات</div>
+                            <textarea id="notes" rows="2"></textarea>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn-primary">ثبت نهایی</button>
+                        <button type="button" id="cancelEdit" class="btn-danger" style="display:none; margin-top:10px;">انصراف</button>
+                    </form>
+                </div>
+
+                <div class="data-card">
+                    <h2 class="list-title">لیست موارد ثبت شده امروز</h2>
+                    <div id="todayItemsContainer"></div>
+                </div>
             </section>
 
-            <section class="data-card">
-                <div class="list-header">
-                    <h2>لیست دیتابیس قطعات</h2>
-                    <div class="search-wrapper">
-                        <input type="text" id="searchInput" placeholder="جستجو کد یا نام...">
-                        <i class="bi bi-search"></i>
+            <!-- تب اطلاعات (نمای اکسلی) -->
+            <section id="databaseTab" class="tab-content">
+                <div class="data-card full-width">
+                    <div class="table-controls">
+                        <div class="search-wrapper">
+                            <input type="text" id="searchInput" placeholder="جستجو کد یا نام در کل دیتابیس...">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <button id="exportExcel" class="btn-excel-sm"><i class="bi bi-download"></i> خروجی اکسل</button>
+                    </div>
+
+                    <div class="excel-container">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">عملیات</th>
+                                    <th>کد قطعه</th>
+                                    <th>نام قطعه</th>
+                                    <th>نوع محصول</th>
+                                    <th>مدل</th>
+                                    <th>مواد اصلی</th>
+                                    <th>مواد جایگزین</th>
+                                    <th>مستربچ</th>
+                                    <th>دستگاه</th>
+                                    <th>کد قالب</th>
+                                    <th>کویته</th>
+                                    <th>سایکل</th>
+                                    <th>خنکی</th>
+                                    <th>وزن قطعه</th>
+                                    <th>وزن راهگاه</th>
+                                    <th>جانبی</th>
+                                    <th>وزن جانبی</th>
+                                    <th>ابزار خاص</th>
+                                    <th>بسته‌بندی</th>
+                                    <th>تعداد</th>
+                                    <th>تاریخ</th>
+                                    <th>توضیحات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
                     </div>
                 </div>
-                <button id="exportExcel" class="btn-excel"><i class="bi bi-file-earmark-excel-fill"></i> خروجی کامل اکسل و عکس‌ها</button>
-                <div id="itemsContainer" class="cards-list"></div>
             </section>
         </main>
     </div>
+
+    <div id="successModal" class="success-overlay">
+        <div class="success-content">
+            <h3 id="modalMessage">ذخیره شد</h3>
+            <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
