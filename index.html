@@ -36,7 +36,10 @@
                         <div class="section-box">
                             <div class="section-header"><i class="bi bi-info-circle-fill"></i> مشخصات عمومی</div>
                             <div class="form-grid stack-on-mobile">
-                                <div class="input-group"><label class="required-label">کد قطعه</label><input type="text" id="partCode" required></div>
+                                <div class="input-group">
+                                    <label class="required-label">کد قطعه</label>
+                                    <input type="text" id="partCode" required placeholder="مثلاً: 1010">
+                                </div>
                                 <div class="input-group"><label class="required-label">نام قطعه</label><input type="text" id="partName" required></div>
                                 <div class="input-group"><label>نوع محصول</label><input type="text" id="productType"></div>
                                 <div class="input-group"><label>مدل یا سری</label><input type="text" id="model"></div>
@@ -117,7 +120,12 @@
                             <input type="text" id="searchInput" placeholder="جستجو کد یا نام در کل دیتابیس...">
                             <i class="bi bi-search"></i>
                         </div>
-                        <button id="exportExcel" class="btn-excel-sm"><i class="bi bi-download"></i> خروجی اکسل</button>
+                        <div class="action-buttons">
+                            <button id="exportExcel" class="btn-excel-sm" title="خروجی CSV"><i class="bi bi-file-earmark-excel"></i> اکسل</button>
+                            <button id="backupData" class="btn-backup-sm" title="پشتیبان‌گیری از کل اطلاعات"><i class="bi bi-cloud-arrow-down"></i> بکاپ</button>
+                            <button id="restoreData" class="btn-restore-sm" title="بازیابی اطلاعات از فایل"><i class="bi bi-cloud-arrow-up"></i> بازیابی</button>
+                            <input type="file" id="importFile" accept=".json" style="display:none">
+                        </div>
                     </div>
 
                     <div class="excel-container">

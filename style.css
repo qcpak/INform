@@ -7,6 +7,8 @@
     --success: #059669;
     --danger: #e11d48;
     --border: #e2e8f0;
+    --warning: #f59e0b;
+    --indigo: #6366f1;
 }
 
 * {
@@ -78,7 +80,7 @@ header {
     display: block;
 }
 
-/* پیش نمایش عکس کوچک */
+/* پیش نمایش عکس */
 .preview-box img {
     max-width: 120px;
     max-height: 120px;
@@ -87,7 +89,77 @@ header {
     border: 2px solid var(--border);
 }
 
-/* جدول اکسلی تب دوم */
+/* بخش عملیات جدول */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-wrapper {
+    position: relative;
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.search-wrapper input {
+    padding: 10px 35px 10px 10px;
+    border-radius: 20px;
+}
+
+.search-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: var(--secondary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+/* دکمه‌ها */
+.btn-excel-sm {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.btn-backup-sm {
+    background: var(--indigo);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.btn-restore-sm {
+    background: var(--warning);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+/* استایل فیلد نامعتبر (کد تکراری) */
+input.invalid-field {
+    border: 2px solid var(--danger) !important;
+    background-color: #fff1f2;
+}
+
+/* جدول اکسلی */
 .full-width {
     padding: 5px !important;
     overflow: hidden;
@@ -130,7 +202,6 @@ header {
     background: #f1f5f9;
 }
 
-/* ستون ثابت عملیات در جدول */
 .sticky-col {
     position: sticky;
     right: 0;
@@ -178,6 +249,7 @@ header {
     font-weight: bold;
     color: var(--secondary);
     margin-bottom: 4px;
+    display: block;
 }
 
 input,
@@ -200,8 +272,18 @@ textarea {
     font-weight: bold;
 }
 
-.btn-excel-sm {
-    background: var(--success);
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    width: 100%;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: var(--secondary);
     color: white;
     border: none;
     padding: 8px 15px;
@@ -210,32 +292,7 @@ textarea {
     font-size: 0.8rem;
 }
 
-.table-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    gap: 10px;
-}
-
-.search-wrapper {
-    position: relative;
-    flex-grow: 1;
-}
-
-.search-wrapper input {
-    padding: 10px 35px 10px 10px;
-    border-radius: 20px;
-}
-
-.search-wrapper i {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    color: var(--secondary);
-}
-
-/* کارت‌های لیست امروز در تب اول */
+/* کارت‌های لیست امروز */
 .item-card {
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -246,7 +303,6 @@ textarea {
     align-items: center;
     background: #fff;
     font-size: 0.9rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .item-card b {
@@ -259,15 +315,6 @@ textarea {
     font-size: 1.1rem;
 }
 
-.card-actions-mini i {
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.card-actions-mini i:hover {
-    transform: scale(1.2);
-}
-
 .list-title {
     font-size: 0.95rem;
     color: var(--secondary);
@@ -276,6 +323,7 @@ textarea {
     padding-right: 10px;
 }
 
+/* مدال موفقیت */
 .success-overlay {
     position: fixed;
     top: 0;
@@ -294,4 +342,10 @@ textarea {
     padding: 25px;
     border-radius: 20px;
     text-align: center;
+}
+
+.success-icon {
+    font-size: 3rem;
+    color: var(--success);
+    margin-top: 10px;
 }

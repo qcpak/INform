@@ -9,7 +9,7 @@ window.openTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
+    if (event) event.currentTarget.classList.add('active');
     renderItems();
 };
 
@@ -18,13 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableBody = document.getElementById('tableBody');
     const todayItemsContainer = document.getElementById('todayItemsContainer');
     const searchInput = document.getElementById('searchInput');
+    const partCodeInput = document.getElementById('partCode');
     const imageInput = document.getElementById('imageInput');
+    
     const exportBtn = document.getElementById('exportExcel');
+    const backupBtn = document.getElementById('backupData');
+    const restoreBtn = document.getElementById('restoreData');
+    const importFile = document.getElementById('importFile');
 
     let items = JSON.parse(localStorage.getItem('injection_db_v2')) || [];
     let currentImageBase64 = "";
     let bomLookupTable = {};
 
+    // بارگذاری دیتای BOM برای تکمیل خودکار
     async function loadBomData() {
         try {
             const response = await fetch('bom-data.json');
@@ -40,8 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     loadBomData();
 
-    document.getElementById('partCode').addEventListener('input', (e) => {
-        const info = bomLookupTable[e.target.value.trim()];
+    // ۱. بررسی آنی کد تکراری هنگام تایپ
+    partCodeInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        const editingId = document.getElementById('editingId').value;
+        
+        // چک تکراری در دیتابیس فعلی
+        const isDuplicate = items.some(i => i.partCode === val && i.id.toString() !== editingId);
+        
+        if (isDuplicate && val !== "") {
+            partCodeInput.classList.add('invalid-field');
+        } else {
+            partCodeInput.classList.remove('invalid-field');
+        }
+
+        // تکمیل خودکار از فایل BOM
+        const info = bomLookupTable[val];
         if(info) {
             document.getElementById('partName').value = info.name;
             document.getElementById('productType').value = info.type;
@@ -49,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // پردازش تصویر
     imageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -71,14 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     });
 
+    // ثبت نهایی فرم
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const editingId = document.getElementById('editingId').value;
-        const partCode = document.getElementById('partCode').value.trim();
+        const partCode = partCodeInput.value.trim();
 
         const isDuplicate = items.some(i => i.partCode === partCode && i.id.toString() !== editingId);
         if(isDuplicate) {
-            alert("خطا: این کد قبلاً ثبت شده است!");
+            alert("خطا: این کد قطعه قبلاً ثبت شده است!");
+            partCodeInput.focus();
             return;
         }
 
@@ -128,8 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
         currentImageBase64 = "";
         document.getElementById('cancelEdit').style.display = "none";
         document.getElementById('submitBtn').innerText = "ثبت نهایی";
+        partCodeInput.classList.remove('invalid-field');
     }
 
+    // رندر کردن لیست‌ها
     function renderItems() {
         const term = searchInput.value.trim();
         const today = new Date().toLocaleDateString('fa-IR');
@@ -140,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filteredItems = items.filter(i => i.partName.includes(term) || i.partCode.includes(term));
 
         filteredItems.forEach(item => {
-            // ۱. رندر در جدول اصلی (تب دوم)
+            // رندر جدول اصلی
             const row = `
                 <tr>
                     <td class="sticky-col">
@@ -171,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`;
             tableBody.insertAdjacentHTML('beforeend', row);
 
-            // ۲. رندر در لیست امروز (تب اول) با دکمه ویرایش و حذف
+            // رندر لیست امروز
             if (item.date === today) {
                 const card = `
                     <div class="item-card">
@@ -211,7 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('packagingType').value = item.packagingType;
         document.getElementById('packagingQty').value = item.packagingQty;
         document.getElementById('notes').value = item.notes;
-        if(item.image) document.getElementById('imagePreview').innerHTML = `<img src="${item.image}">`;
+        if(item.image) {
+            currentImageBase64 = item.image;
+            document.getElementById('imagePreview').innerHTML = `<img src="${item.image}">`;
+        }
         
         document.getElementById('submitBtn').innerText = "بروزرسانی تغییرات";
         document.getElementById('cancelEdit').style.display = "block";
@@ -226,17 +254,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ۲. عملیات بکاپ (خروجی JSON کامل)
+    backupBtn.addEventListener('click', () => {
+        if (items.length === 0) return alert("دیتایی برای پشتیبان‌گیری وجود ندارد.");
+        const dataStr = JSON.stringify(items, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Backup_Injection_${new Date().toLocaleDateString('fa-IR').replace(/\//g, '-')}.json`;
+        a.click();
+    });
+
+    // ۳. عملیات بازیابی (Restore)
+    restoreBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const importedData = JSON.parse(event.target.result);
+                if (Array.isArray(importedData)) {
+                    if (confirm(`تعداد ${importedData.length} مورد یافت شد. جایگزین دیتابیس فعلی شود؟`)) {
+                        items = importedData;
+                        localStorage.setItem('injection_db_v2', JSON.stringify(items));
+                        renderItems();
+                        alert("اطلاعات با موفقیت بازیابی شد.");
+                    }
+                }
+            } catch (err) { alert("فایل انتخاب شده معتبر نیست!"); }
+        };
+        reader.readAsText(file);
+    });
+
+    // ۴. خروجی اکسل کامل (۲۱ فیلد)
     exportBtn.addEventListener('click', () => {
         if (items.length === 0) return;
-        const headers = ["کد", "نام", "محصول", "مدل", "سایکل", "وزن", "تاریخ"];
+        
+        const headers = [
+            "تاریخ", "کد قطعه", "نام قطعه", "نوع محصول", "مدل", 
+            "مواد اصلی", "مواد جایگزین", "مستربچ", "نام دستگاه", 
+            "کد قالب", "تعداد کویته", "سایکل (S)", "زمان خنکی", 
+            "وزن قطعه", "وزن راهگاه", "نام قطعات جانبی", "وزن قطعات جانبی", 
+            "ابزار خاص", "نوع بسته‌بندی", "تعداد در بسته", "ملاحظات"
+        ];
+
         let csv = "\uFEFF" + headers.join(",") + "\n";
+        
         items.forEach(i => {
-            csv += `"${i.partCode}","${i.partName}","${i.productType}","${i.model}","${i.cycleTime}","${i.partWeight}","${i.date}"\n`;
+            const row = [
+                i.date, i.partCode, i.partName, i.productType, i.model,
+                i.mainMaterial, i.altMaterial, i.masterbatch, i.machineName,
+                i.moldCode, i.cavity, i.cycleTime, i.coolingTime,
+                i.partWeight, i.runnerWeight, i.usedPartName, i.usedPartWeight,
+                i.specialTools, i.packagingType, i.packagingQty, i.notes
+            ].map(val => `"${(val || "").toString().replace(/"/g, '""')}"`);
+            
+            csv += row.join(",") + "\n";
         });
+
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `Injection_Report.csv`;
+        a.download = `Injection_Full_Report.csv`;
         a.click();
     });
 
