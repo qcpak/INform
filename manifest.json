@@ -1,0 +1,15 @@
+{
+  "short_name": "شناسنامه فنی",
+  "name": "مدیریت شناسنامه فنی قطعات تزریق",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1541/1541415.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#f1f5f9"
+}
