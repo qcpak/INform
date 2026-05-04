@@ -1,5 +1,5 @@
-const CACHE_NAME = 'injection-cache-v7';
-const assets = [
+const CACHE_NAME = 'injection-cache-v11';
+const assets =[
     './',
     './index.html',
     './style.css',

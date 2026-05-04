@@ -18,10 +18,10 @@
         </header>
 
         <nav class="tab-navigation">
-            <button class="tab-btn active" onclick="openTab('registrationTab')">
+            <button class="tab-btn active" onclick="openTab('registrationTab', event)">
                 <i class="bi bi-plus-circle"></i> ثبت و ویرایش
             </button>
-            <button class="tab-btn" onclick="openTab('databaseTab')">
+            <button class="tab-btn" onclick="openTab('databaseTab', event)">
                 <i class="bi bi-table"></i> بانک اطلاعات (جدول)
             </button>
         </nav>
@@ -32,18 +32,18 @@
                     <form id="injectionForm">
                         <input type="hidden" id="editingId" value="">
                         
-                        <!-- ۱. مشخصات شناسایی - کد قطعه در ابتدا -->
+                        <!-- ۱. مشخصات شناسایی -->
                         <div class="section-box">
                             <div class="section-header"><i class="bi bi-info-circle-fill"></i> مشخصات شناسایی (جستجوی خودکار)</div>
                             <div class="form-grid">
                                 <div class="input-group">
                                     <label class="required-label">کد قطعه</label>
-                                    <input type="text" id="partCode" required placeholder="کد را وارد کنید..." style="border: 2px solid var(--primary);">
+                                    <input type="text" id="partCode" required placeholder="کد را وارد کنید..." inputmode="numeric" style="transition: all 0.3s ease;">
                                 </div>
                                 <div class="input-group"><label class="required-label">نام قطعه</label><input type="text" id="partName" required></div>
                                 <div class="input-group"><label>نوع محصول</label><input type="text" id="productType"></div>
                                 <div class="input-group"><label>مدل یا سری</label><input type="text" id="model"></div>
-                                <div class="input-group"><label>کد قالب</label><input type="text" id="moldCode"></div>
+                                <div class="input-group"><label>کد قالب</label><input type="text" id="moldCode" inputmode="numeric"></div>
                                 <div class="input-group"><label>نام دستگاه</label><input type="text" id="machineName"></div>
                             </div>
                         </div>
@@ -66,8 +66,8 @@
                             <div class="form-grid">
                                 <div class="input-group"><label>مواد مصرفی</label><input type="text" id="mainMaterial"></div>
                                 <div class="input-group"><label>مستربچ</label><input type="text" id="masterbatch"></div>
-                                <div class="input-group"><label>گازگیر (Dryer)</label><input type="text" id="dryerInfo"></div>
-                                <div class="input-group"><label>دمای ذوب مواد</label><input type="text" id="meltTemp"></div>
+                                <div class="input-group"><label>گازگیر (Dryer)</label><input type="text" id="dryerInfo" inputmode="numeric"></div>
+                                <div class="input-group"><label>دمای ذوب مواد</label><input type="number" id="meltTemp" inputmode="numeric"></div>
                             </div>
                         </div>
 
@@ -75,12 +75,12 @@
                         <div class="section-box">
                             <div class="section-header"><i class="bi bi-gear-wide-connected"></i> پارامترهای فرآیند</div>
                             <div class="form-grid">
-                                <div class="input-group"><label>سایکل تایم (s)</label><input type="number" step="0.1" id="cycleTime"></div>
-                                <div class="input-group"><label>فشار تزریق (max)</label><input type="text" id="injectionPressure"></div>
-                                <div class="input-group"><label>زمان تزریق (s)</label><input type="number" step="0.1" id="injectionTime"></div>
-                                <div class="input-group"><label>دمای سیلندر (max)</label><input type="text" id="cylinderTemp"></div>
-                                <div class="input-group"><label>زمان خنکی قطعه (s)</label><input type="number" id="coolingTime"></div>
-                                <div class="input-group"><label>تعداد کویته</label><input type="number" id="cavity"></div>
+                                <div class="input-group"><label>سایکل تایم (s)</label><input type="number" step="0.1" id="cycleTime" inputmode="decimal"></div>
+                                <div class="input-group"><label>فشار تزریق (max)</label><input type="number" id="injectionPressure" inputmode="numeric"></div>
+                                <div class="input-group"><label>زمان تزریق (s)</label><input type="number" step="0.1" id="injectionTime" inputmode="decimal"></div>
+                                <div class="input-group"><label>دمای سیلندر (max)</label><input type="number" id="cylinderTemp" inputmode="numeric"></div>
+                                <div class="input-group"><label>زمان خنکی قطعه (s)</label><input type="number" id="coolingTime" inputmode="numeric"></div>
+                                <div class="input-group"><label>تعداد کویته</label><input type="number" id="cavity" inputmode="numeric"></div>
                             </div>
                         </div>
 
@@ -88,11 +88,11 @@
                         <div class="section-box">
                             <div class="section-header"><i class="bi bi-balance"></i> وزن و تلرانس</div>
                             <div class="form-grid">
-                                <div class="input-group"><label>وزن قطعه (g)</label><input type="number" step="0.01" id="partWeight"></div>
-                                <div class="input-group"><label>تلرانس وزن (g)</label><input type="text" id="weightTolerance"></div>
-                                <div class="input-group"><label>وزن راه‌گاه (g)</label><input type="number" step="0.01" id="runnerWeight"></div>
-                                <div class="input-group"><label>قطعات بکاررفته (جانبی)</label><input type="text" id="usedParts"></div>
-                                <div class="input-group"><label>وزن قطعات بکار رفته (g)</label><input type="number" step="0.01" id="usedPartsWeight"></div>
+                                <div class="input-group"><label>وزن قطعه (g)</label><input type="number" step="0.01" id="partWeight" inputmode="decimal"></div>
+                                <div class="input-group"><label>تلرانس وزن (g)</label><input type="text" id="weightTolerance" inputmode="decimal"></div>
+                                <div class="input-group"><label>وزن راه‌گاه (g)</label><input type="number" step="0.01" id="runnerWeight" inputmode="decimal"></div>
+                                <div class="input-group"><label>قطعات جانبی</label><input type="text" id="usedParts"></div>
+                                <div class="input-group"><label>وزن جانبی (g)</label><input type="number" step="0.01" id="usedPartsWeight" inputmode="decimal"></div>
                             </div>
                         </div>
 
@@ -100,7 +100,7 @@
                         <div class="section-box">
                             <div class="section-header"><i class="bi bi-tools"></i> ابزارآلات و بسته‌بندی</div>
                             <div class="form-grid">
-                                <div class="input-group"><label>ابزار کنترلی</label><input type="text" id="controlTools" placeholder="گیج، فیکسچر..."></div>
+                                <div class="input-group"><label>ابزار کنترلی</label><input type="text" id="controlTools"></div>
                                 <div class="input-group"><label>ابزار تزریق</label><input type="text" id="injectionTools"></div>
                                 <div class="input-group"><label>نوع بسته‌بندی و تعداد</label><input type="text" id="packagingInfo"></div>
                             </div>
@@ -111,7 +111,7 @@
                         </div>
 
                         <button type="submit" id="submitBtn" class="btn-primary">ثبت نهایی شناسنامه</button>
-                        <button type="button" id="cancelEdit" class="btn-danger" style="display:none; margin-top:10px;">انصراف</button>
+                        <button type="button" id="cancelEdit" class="btn-danger" style="display:none; margin-top:10px;">انصراف از ویرایش</button>
                     </form>
                 </div>
 
@@ -126,8 +126,9 @@
                     <div class="table-controls">
                         <input type="text" id="searchInput" placeholder="جستجو کد یا نام...">
                         <div class="action-buttons">
-                            <button id="exportExcel" class="btn-excel-sm">اکسل</button>
-                            <button id="backupData" class="btn-backup-sm">بکاپ</button>
+                            <button id="exportExcel" class="btn-excel-sm" style="background:#15803d">اکسل کامل (CSV)</button>
+                            <button id="exportPhotoReport" class="btn-excel-sm" style="background:#7c3aed">گزارش کامل (عکس‌دار)</button>
+                            <button id="backupData" class="btn-backup-sm">بکاپ فایل</button>
                             <button id="restoreData" class="btn-restore-sm">بازیابی</button>
                             <input type="file" id="importFile" accept=".json" style="display:none">
                         </div>
@@ -159,7 +160,7 @@
                                     <th>تلرانس وزن</th>
                                     <th>کویته</th>
                                     <th>وزن راهگاه</th>
-                                    <th>قطعات بکاررفته</th>
+                                    <th>قطعات جانبی</th>
                                     <th>وزن جانبی</th>
                                     <th>ابزار کنترلی</th>
                                     <th>ابزار تزریق</th>

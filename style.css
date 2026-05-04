@@ -43,7 +43,6 @@ h1 {
     color: var(--primary);
 }
 
-/* Tabs */
 .tab-navigation {
     display: flex;
     gap: 8px;
@@ -78,7 +77,6 @@ h1 {
     display: block;
 }
 
-/* Sections */
 .form-card,
 .data-card {
     background: var(--card);
@@ -107,7 +105,6 @@ h1 {
     font-size: 0.9rem;
 }
 
-/* Grid */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -143,7 +140,6 @@ input:focus {
     color: var(--danger);
 }
 
-/* Table */
 .excel-container {
     overflow: auto;
     max-height: 70vh;
@@ -181,7 +177,6 @@ input:focus {
     border-left: 2px solid var(--primary);
 }
 
-/* Buttons */
 .btn-primary {
     background: var(--primary);
     color: white;
@@ -222,26 +217,21 @@ input:focus {
     flex-wrap: wrap;
 }
 
-.search-wrapper {
-    flex: 1;
-    min-width: 200px;
-}
-
 .btn-excel-sm {
-    background: var(--success);
     color: white;
     border: none;
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.75rem;
+    font-weight: bold;
 }
 
 .btn-backup-sm {
     background: #6366f1;
     color: white;
     border: none;
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.75rem;
@@ -251,14 +241,10 @@ input:focus {
     background: #f59e0b;
     color: white;
     border: none;
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.75rem;
-}
-
-.image-upload-area {
-    text-align: center;
 }
 
 .preview-box img {
@@ -278,14 +264,6 @@ input:focus {
     align-items: center;
     background: #fafafa;
     font-size: 0.85rem;
-}
-
-.list-title {
-    font-size: 0.95rem;
-    border-right: 4px solid var(--success);
-    padding-right: 10px;
-    margin-bottom: 15px;
-    color: var(--secondary);
 }
 
 .success-overlay {
