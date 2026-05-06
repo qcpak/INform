@@ -1,4 +1,4 @@
-const CACHE_NAME = 'injection-cache-v11';
+const CACHE_NAME = 'injection-cache-v12';
 const assets =[
     './',
     './index.html',
