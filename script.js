@@ -401,16 +401,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('restoreData').addEventListener('click', () => document.getElementById('importFile').click());
+    // بخش بازیابی و ترکیب اطلاعات (Restore & Merge)
     document.getElementById('importFile').addEventListener('change', (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                items = JSON.parse(ev.target.result);
+                const importedItems = JSON.parse(ev.target.result);
+
+                if (!Array.isArray(importedItems)) {
+                    alert("ساختار فایل معتبر نیست.");
+                    return;
+                }
+
+                // گرفتن لیست شناسه‌های فعلی برای جلوگیری از تکرار دقیق یک رکورد
+                const existingIds = new Set(items.map(item => item.id));
+
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                importedItems.forEach(newItem => {
+                    if (!existingIds.has(newItem.id)) {
+                        items.push(newItem); // اضافه کردن آیتم جدید
+                        addedCount++;
+                    } else {
+                        skippedCount++; // این آیتم قبلاً وجود داشته است
+                    }
+                });
+
+                // مرتب‌سازی مجدد بر اساس تاریخ یا ID (اختیاری - برای اینکه جدیدها بالا باشند)
+                items.sort((a, b) => b.id - a.id);
+
                 localStorage.setItem('injection_db_v5', JSON.stringify(items));
                 renderItems();
-            } catch (e) { alert("خطا در فایل"); }
+
+                alert(`عملیات با موفقیت انجام شد:\n✅ ${addedCount} مورد جدید اضافه شد.\n⚠️ ${skippedCount} مورد تکراری نادیده گرفته شد.`);
+
+            } catch (e) {
+                alert("خطا در خواندن فایل! مطمئن شوید فایل بکاپ معتبر است.");
+            }
         };
         reader.readAsText(e.target.files[0]);
+        // ریست کردن مقدار اینپوت برای اینکه بتوان همان فایل را دوباره انتخاب کرد
+        e.target.value = '';
     });
 
     searchInput.addEventListener('input', renderItems);
