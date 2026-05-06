@@ -11,24 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const partCodeInput = document.getElementById('partCode');
     const imageInput = document.getElementById('imageInput');
-    
+
     let items = JSON.parse(localStorage.getItem('injection_db_v5')) || [];
     let currentImageBase64 = "";
     let bomLookupTable = {};
 
     // توابع جابجایی تب ها
-    window.openTab = function(tabId, eventObj) {
+    window.openTab = function (tabId, eventObj) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        
+
         if (eventObj && eventObj.currentTarget) {
             eventObj.currentTarget.classList.add('active');
         } else {
             const targetBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
-            if(targetBtn) targetBtn.classList.add('active');
+            if (targetBtn) targetBtn.classList.add('active');
         }
-        
+
         if (tabId === 'databaseTab') {
             renderItems();
         }
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if(bomLookupTable[code]) {
+        if (bomLookupTable[code]) {
             const info = bomLookupTable[code];
             document.getElementById('partName').value = info.name;
             document.getElementById('productType').value = info.type;
@@ -80,13 +80,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX = 400; 
+                // افزایش سایز از 400 به 800 برای کیفیت بهتر
+                const MAX = 800;
                 let w = img.width, h = img.height;
                 if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                 else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+
                 canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                const ctx = canvas.getContext('2d');
+
+                // فعال‌سازی الگوریتم‌های صاف‌کننده تصویر
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                ctx.drawImage(img, 0, 0, w, h);
+
+                // افزایش کیفیت ذخیره‌سازی از 0.6 به 0.8
+                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
                 document.getElementById('imagePreview').innerHTML = `<img src="${currentImageBase64}">`;
             };
             img.src = ev.target.result;
@@ -107,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         const data = {
             id: editingId ? parseInt(editingId) : Date.now(),
-            date: editingId ? items.find(x=>x.id == editingId).date : new Date().toLocaleDateString('fa-IR'),
+            date: editingId ? items.find(x => x.id == editingId).date : new Date().toLocaleDateString('fa-IR'),
             partCode: pCode,
             partName: document.getElementById('partName').value,
             moldCode: document.getElementById('moldCode').value,
@@ -136,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             injectionTools: document.getElementById('injectionTools').value,
             packagingInfo: document.getElementById('packagingInfo').value,
             notes: document.getElementById('notes').value,
-            image: currentImageBase64 || (editingId ? items.find(x=>x.id == editingId).image : "")
+            image: currentImageBase64 || (editingId ? items.find(x => x.id == editingId).image : "")
         };
 
         if (editingId) {
@@ -170,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tableBody.innerHTML = "";
         todayItemsContainer.innerHTML = "";
 
-        const filtered = items.filter(i => (i.partName||"").includes(term) || (i.partCode||"").includes(term));
+        const filtered = items.filter(i => (i.partName || "").includes(term) || (i.partCode || "").includes(term));
 
         filtered.forEach((item, index) => {
             const row = `
@@ -228,10 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.editItem = (id) => {
         const item = items.find(i => i.id == id);
-        if(!item) return;
-        
+        if (!item) return;
+
         window.openTab('registrationTab');
-        
+
         document.getElementById('editingId').value = item.id;
         document.getElementById('partCode').value = item.partCode || "";
         document.getElementById('partName').value = item.partName || "";
@@ -258,24 +268,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('injectionTools').value = item.injectionTools || "";
         document.getElementById('packagingInfo').value = item.packagingInfo || "";
         document.getElementById('notes').value = item.notes || "";
-        
-        if(item.image) {
+
+        if (item.image) {
             currentImageBase64 = item.image;
             document.getElementById('imagePreview').innerHTML = `<img src="${item.image}">`;
         } else {
             currentImageBase64 = "";
             document.getElementById('imagePreview').innerHTML = "";
         }
-        
+
         document.getElementById('submitBtn').innerText = "بروزرسانی شناسنامه";
         document.getElementById('cancelEdit').style.display = "block";
-        window.scrollTo(0,0);
-        
+        window.scrollTo(0, 0);
+
         partCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
     window.deleteItem = (id) => {
-        if(confirm("آیا حذف شود؟")) {
+        if (confirm("آیا حذف شود؟")) {
             items = items.filter(i => i.id !== id);
             localStorage.setItem('injection_db_v5', JSON.stringify(items));
             renderItems();
@@ -284,21 +294,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // خروجی اکسل کامل (CSV) با ستون تصویر خالی و تاریخ شمسی در نام فایل
     document.getElementById('exportExcel').addEventListener('click', () => {
-        const h =[
-            "ردیف", "تاریخ", "کد قطعه", "نام قطعه", "تصویر (خالی)", "نوع محصول", "مدل", "کد قالب", "نام دستگاه", 
-            "مواد", "مستربچ", "گازگیر", "دمای ذوب", "سایکل", "فشار تزریق", "زمان تزریق", 
-            "دمای سیلندر", "زمان خنکی", "کویته", "وزن قطعه", "تلرانس", "وزن راهگاه", 
+        const h = [
+            "ردیف", "تاریخ", "کد قطعه", "نام قطعه", "تصویر (خالی)", "نوع محصول", "مدل", "کد قالب", "نام دستگاه",
+            "مواد", "مستربچ", "گازگیر", "دمای ذوب", "سایکل", "فشار تزریق", "زمان تزریق",
+            "دمای سیلندر", "زمان خنکی", "کویته", "وزن قطعه", "تلرانس", "وزن راهگاه",
             "قطعات جانبی", "وزن جانبی", "ابزار کنترلی", "ابزار تزریق", "بسته بندی", "توضیحات"
         ];
         let csv = "\uFEFF" + h.join(",") + "\n";
         items.forEach((i, idx) => {
-            const row =[
-                idx+1, i.date, i.partCode, i.partName, "", i.productType, i.model, i.moldCode, i.machineName,
+            const row = [
+                idx + 1, i.date, i.partCode, i.partName, "", i.productType, i.model, i.moldCode, i.machineName,
                 i.mainMaterial, i.masterbatch, i.dryerInfo, i.meltTemp, i.cycleTime, i.injectionPressure, i.injectionTime,
                 i.cylinderTemp, i.coolingTime, i.cavity, i.partWeight, i.weightTolerance, i.runnerWeight,
                 i.usedParts, i.usedPartsWeight, i.controlTools, i.injectionTools, i.packagingInfo, i.notes
             ];
-            csv += row.map(v => `"${(v||"").toString().replace(/"/g, '""')}"`).join(",") + "\n";
+            csv += row.map(v => `"${(v || "").toString().replace(/"/g, '""')}"`).join(",") + "\n";
         });
 
         // تولید نام فایل با تاریخ شمسی
@@ -341,11 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                 </thead>
                 <tbody>`;
-        
+
         items.forEach((i, idx) => {
             html += `
                 <tr>
-                    <td>${idx+1}</td>
+                    <td>${idx + 1}</td>
                     <td>${i.date || '-'}</td>
                     <td>${i.image ? `<img src="${i.image}">` : 'فاقد عکس'}</td>
                     <td><b>${i.partCode || '-'}</b></td>
@@ -398,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 items = JSON.parse(ev.target.result);
                 localStorage.setItem('injection_db_v5', JSON.stringify(items));
                 renderItems();
-            } catch(e) { alert("خطا در فایل"); }
+            } catch (e) { alert("خطا در فایل"); }
         };
         reader.readAsText(e.target.files[0]);
     });
