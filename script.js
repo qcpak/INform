@@ -80,23 +80,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                // افزایش سایز از 400 به 800 برای کیفیت بهتر
-                const MAX = 800;
-                let w = img.width, h = img.height;
-                if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
-                else { if (h > MAX) { w *= MAX / h; h = MAX; } }
 
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
+                // تغییر ابعاد به 500 پیکسل (ایده‌آل برای اکسل و حافظه گوشی)
+                const MAX = 500;
+                let w = img.width;
+                let h = img.height;
 
-                // فعال‌سازی الگوریتم‌های صاف‌کننده تصویر
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
+                const isPortrait = h > w;
 
-                ctx.drawImage(img, 0, 0, w, h);
+                if (isPortrait) {
+                    let targetW = h;
+                    let targetH = w;
+                    if (targetW > MAX) {
+                        targetH *= MAX / targetW;
+                        targetW = MAX;
+                    }
+                    canvas.width = targetW;
+                    canvas.height = targetH;
 
-                // افزایش کیفیت ذخیره‌سازی از 0.6 به 0.8
-                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    const ctx = canvas.getContext('2d');
+                    // این دو خط باعث می‌شود تصویر هنگام کوچک شدن تار نشود
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate(90 * Math.PI / 180);
+                    ctx.drawImage(img, -w * (targetH / w) / 2, -h * (targetW / h) / 2, w * (targetH / w), h * (targetW / h));
+                } else {
+                    if (w > MAX) {
+                        h *= MAX / w;
+                        w = MAX;
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+                }
+
+                // استفاده از کیفیت 0.75 برای تعادل بین حجم و وضوح
+                currentImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
                 document.getElementById('imagePreview').innerHTML = `<img src="${currentImageBase64}">`;
             };
             img.src = ev.target.result;
